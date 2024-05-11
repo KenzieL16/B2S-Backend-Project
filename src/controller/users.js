@@ -14,10 +14,10 @@ const register = async (req, res) => {
     }
 
     let role;
-    if (email.endsWith('@mejakita.com')) {
-        role = 'Kontributor';
+    if (email.endsWith('@teacher.id')) {
+        role = 'Guru';
     } else {
-        role = 'User';
+        role = 'Siswa';
     }
 
     try {
@@ -67,10 +67,10 @@ const login = async (req, res) => {
         if (!user) {
             return res.status(401).json({ msg: "Email Salah" });
         }
-
+        
         console.log('Debugging output:');
         console.log('Password from request:', password);
-        console.log('Combined password from database:', user.combinedPassword);
+        // console.log('Combined password from database:', user.combinedPassword);
 
         // Validasi password
         const isPasswordMatch = comparePassword(password, user.combinedPassword);
@@ -81,18 +81,19 @@ const login = async (req, res) => {
 
         // Jika password cocok, buat token JWT
         const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role, email: user.email },
+            { id_users: user.id, username: user.username, role: user.role, email: user.email },
             process.env.JWT_SECRET,
             { expiresIn: '1d' } // Token akan kadaluwarsa dalam 1 hari
         );
-
+        
         res.json({
             message: 'Login successful',
             token,
             user: {
+                id_users: user.id,
                 username: user.username,
                 email: user.email,
-                role: user.role
+                role: user.role,
             }
         });
     } catch (error) {
@@ -133,8 +134,47 @@ const comparePassword = (password, combinedPassword) => {
 
     return isPasswordMatch;
 };
+
+const Updateusers = async (req, res) => {
+    const { idUser, role } = req.body;
+    const { user } = req;
+    try{
+        if (user && user.role === 'Admin') {
+            await usersModel.updateUsers(idUser, role);
+            res.json({
+            message: 'Update users Successfully',
+            data: { idUser, role }
+            });
+        } else {
+            res.status(403).json({ success: false, message: 'Unauthorized' })
+        };
+    }catch(error){
+        res.status(500).json({
+            message: "Server Error",
+            serverMessage: error.message
+        })
+    }
+};
+
+const Getusers = async (req, res) => {
+    const { user } = req;
+    try{
+        if (user && user.role === 'Admin'){
+            const usersData = await usersModel.getUsers();
+            res.status(200).json(usersData);
+        }else{
+            res.status(403).json({ success: false, message: 'Unauthorized' })
+        };
+    }catch(error){
+        console.log(error.message);
+        res.status(500).json({ success: false, message: 'Gagal mengambil data user', error: error.message });
+    };
+}
+
 export default {
     register,
     Deleteusers,
     login,
+    Updateusers,
+    Getusers,
 };
