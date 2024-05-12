@@ -8,6 +8,8 @@ const router = express.Router();
 
 router.get('/:id_exams/get-all-soal', verifyToken, ujiancontroller.getAllSoal)
 
+router.get('/:kelas/get-list-exams', verifyToken, ujiancontroller.getListExams)
+
 router.post('/:id_exams/submit-jawaban', verifyToken, ujiancontroller.submitJawaban)
 
 router.post('/:id_exams/enrollment', verifyToken, ujiancontroller.enrollment)

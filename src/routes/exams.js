@@ -8,6 +8,8 @@ const router = express.Router();
 
 router.get('/get-exams', verifyToken, listexams.getExams);
 
+router.get('/get-exams-score/:id_exams', verifyToken, listexams.getExamsScores);
+
 router.post('/add-exams', verifyToken, listexams.createNewExams);
 
 router.patch('/update/:id_exams', verifyToken, listexams.updateExams);

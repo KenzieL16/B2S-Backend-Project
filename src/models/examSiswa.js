@@ -141,7 +141,7 @@ async function countNilai(id_users, id_exams) {
     try {
 
         // Cek apakah sudah ada nilai untuk pasangan id_user dan id_latihan_soal yang diberikan
-        const checkExistingQuery = 'SELECT COUNT(*) AS count FROM nilai_akhir WHERE id_user_fkeys = ? AND id_exams_fkeys = ?';
+        const checkExistingQuery = 'SELECT COUNT(*) AS count FROM nilai_akhir WHERE id_users = ? AND id_exams = ?';
         const [checkResult] = await connection.execute(checkExistingQuery, [id_users, id_exams]);
         const existingCount = checkResult[0].count;
 
@@ -202,7 +202,7 @@ async function countNilai(id_users, id_exams) {
 
         // Insert atau update (replace) data di tabel nilai_akhir
         const insertNilaiAkhirQuery = `
-            INSERT INTO nilai_akhir (id_user_fkeys, id_exams_fkeys, id_enrollments, jumlah_benar, konten_nilai, jumlah_salah)
+            INSERT INTO nilai_akhir (id_users, id_exams, id_enrollments, jumlah_benar, konten_nilai, jumlah_salah)
             VALUES (?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE jumlah_benar = ?, konten_nilai = ?, jumlah_salah = ?;
         `;
@@ -254,7 +254,7 @@ async function doneUjian(id_users, id_exams) {
         const getNilaiAkhirQuery = `
             SELECT konten_nilai
             FROM nilai_akhir
-            WHERE id_exams_fkeys = ? AND id_user_fkeys = ?
+            WHERE id_exams = ? AND id_users = ?
         `;
         const [nilaiAkhirResults] = await connection.execute(getNilaiAkhirQuery, [id_exams, id_users]);
 
@@ -318,7 +318,7 @@ async function doneUjian(id_users, id_exams) {
 
 async function checkNilaiAkhir(id_users, id_exams) {
     try {
-        const query = 'SELECT konten_nilai FROM nilai_akhir WHERE id_user_fkeys = ? AND id_exams_fkeys = ?';
+        const query = 'SELECT konten_nilai FROM nilai_akhir WHERE id_users = ? AND id_exams = ?';
         const [result] = await dbpool.execute(query, [id_users, id_exams]);
         if (result.length > 0) {
             return result[0].konten_nilai;
@@ -330,11 +330,32 @@ async function checkNilaiAkhir(id_users, id_exams) {
     }
 }
 
+const getListExams = async (kelas) => {
+    try {
+        const query = `
+            SELECT 
+                id_exams, 
+                nama_exams,
+                start_at, 
+                end_at, 
+                durasi, 
+                createdAt
+            FROM exams
+            WHERE deleted IS NULL AND kelas = ?
+        `;
+        const [rows] = await dbpool.execute(query, [kelas]);
+        return rows;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export default {
     getAllSoal,
     submitJawaban,
     enrollment,
     countNilai,
     doneUjian,
-    checkNilaiAkhir
+    checkNilaiAkhir,
+    getListExams
 }

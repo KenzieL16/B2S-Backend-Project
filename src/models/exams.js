@@ -82,9 +82,39 @@ const deleteExams = async (id_usersfk, id_exams) => {
     }
 };
 
+async function getExamsScores(id_users, id_exams) {
+    try {
+        // Periksa apakah id_users dan id_exams sesuai dengan data di tabel exams
+        const checkExamsQuery = 'SELECT * FROM exams WHERE id_exams = ? AND id_usersfk = ?';
+        const [examsResult] = await dbpool.execute(checkExamsQuery, [id_exams, id_users]);
+
+        if (examsResult.length === 0) {
+            throw new Error('ID exams atau ID users tidak valid');
+        }
+
+        // Ambil semua nilai dari tabel nilai_akhir berdasarkan id_exams
+        const getScoresQuery = `
+            SELECT na.konten_nilai, na.jumlah_benar, na.jumlah_salah, u.username
+            FROM nilai_akhir na
+            INNER JOIN users u ON na.id_users = u.id_users
+            WHERE na.id_exams = ?
+        `;
+        const [scoresResult] = await dbpool.execute(getScoresQuery, [id_exams]);
+
+        if (scoresResult.length === 0) {
+            throw new Error('Belum ada nilai');
+        }
+
+        return scoresResult;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export default {
     createNewExam,
     getExams,
     updateExams,
     deleteExams,
+    getExamsScores
 };

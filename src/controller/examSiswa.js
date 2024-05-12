@@ -110,10 +110,35 @@ const doneUjian = async (req, res) => {
     }
 };
 
+const getListExams = async (req, res, next) => {
+    const { user, params } = req;
+
+    try {
+        if (user.id_users === undefined) {
+            throw new Error('Anda Harus Login');
+        }
+        const result = await ujianModel.getListExams(params.kelas);
+        res.status(200).json({ success: true, data: result });
+    } catch (error) {
+
+        if (error instanceof BadRequestError) {
+            res.status(400).json({ success: false, message: error.message });
+        } else if (error instanceof CustomError) {
+            // Kesalahan kustom lainnya yang telah dihandle
+            res.status(error.statusCode).json({ success: false, message: error.message });
+        } else {
+            // Kesalahan internal server atau kesalahan lain yang tidak terduga
+            res.status(500).json({ success: false, message: 'Gagal mendapatkan data Ujian', error: error.message });
+        }
+    }
+
+};
+
 export default {
     getAllSoal,
     submitJawaban,
     enrollment,
     countNilai,
-    doneUjian
+    doneUjian,
+    getListExams
 };

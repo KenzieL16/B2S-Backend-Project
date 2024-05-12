@@ -104,11 +104,36 @@ const deleteExams = async (req, res, next) => {
 
 };
 
+const getExamsScores = async (req, res, next) => {
+    const { user, params } = req;
 
+    try {
+        if (user && user.role === 'Guru') {
+            const result = await examsModel.getExamsScores(user.id_users, params.id_exams);
+            res.status(201).json({ success: true, message: 'Berhasil mendapatkan nilai ujian', result });
+        } else {
+            res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+    } catch (error) {
+        console.error(error);
+
+        if (error instanceof BadRequestError) {
+            res.status(400).json({ success: false, message: error.message });
+        } else if (error instanceof CustomError) {
+            // Kesalahan kustom lainnya yang telah dihandle
+            res.status(error.statusCode).json({ success: false, message: error.message });
+        } else {
+            // Kesalahan internal server atau kesalahan lain yang tidak terduga
+            res.status(500).json({ success: false, message: 'Gagal mendapatkan data Ujian', error: error.message });
+        }
+    }
+
+};
 
 export default {
     createNewExams,
     getExams,
     updateExams,
-    deleteExams
+    deleteExams,
+    getExamsScores
 };
